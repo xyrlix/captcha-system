@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>验证码系统 - 全行业解决方案</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 24px 20px 40px;
+        }
+
+        .container {
+            max-width: 1440px;
+            margin: 0 auto;
+        }
+
+        /* ── 页头 ── */
+        .page-header {
+            text-align: center;
+            margin-bottom: 36px;
+        }
+        .page-header h1 {
+            color: white;
+            font-size: 2.4rem;
+            text-shadow: 2px 2px 6px rgba(0,0,0,0.3);
+            margin-bottom: 8px;
+        }
+        .page-header .subtitle {
+            color: rgba(255,255,255,0.88);
+            font-size: 1.05rem;
+        }
+        .page-header .stats {
+            display: inline-flex;
+            gap: 16px;
+            margin-top: 14px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .stat-chip {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            backdrop-filter: blur(4px);
+        }
+
+        /* ── 分类区块 ── */
+        .category {
+            margin-bottom: 36px;
+        }
+        .category-title {
+            color: white;
+            font-size: 1.35rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            padding-left: 4px;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.25);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .category-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255,255,255,0.3);
+            margin-left: 8px;
+        }
+
+        /* ── 卡片网格 ── */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 20px;
+        }
+
+        /* ── 验证码卡片 ── */
+        .card {
+            background: white;
+            border-radius: 14px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 24px rgba(0,0,0,0.18);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .card-title {
+            font-size: 1.1rem;
+            color: #222;
+            font-weight: 600;
+        }
+
+        /* 难度标签 */
+        .badge {
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 500;
+            white-space: nowrap;
+            color: white;
+        }
+        .badge.easy,
+        .badge.simple   { background: #43a047; }
+        .badge.medium   { background: #1e88e5; }
+        .badge.hard     { background: #fb8c00; }
+        .badge.expert   { background: #e53935; }
+
+        .card-desc {
+            color: #666;
+            font-size: 0.88rem;
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+
+        /* ── 验证码展示区 ── */
+        .captcha-area {
+            background: #f6f7fb;
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 12px;
+            min-height: 130px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .captcha-area img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+        }
+
+        /* ── 输入区 ── */
+        .input-area {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .input-area input {
+            flex: 1;
+            padding: 9px 13px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            transition: border-color 0.2s;
+        }
+        .input-area input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        /* 独立 input（宽度100%） */
+        .full-input {
+            width: 100%;
+            padding: 9px 13px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            margin-bottom: 10px;
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+        }
+        .full-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        /* ── 按钮组 ── */
+        .btn-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .btn {
+            padding: 9px 18px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-primary:hover  { opacity: 0.9; transform: scale(1.02); }
+        .btn-secondary      { background: #ebebeb; color: #333; }
+        .btn-secondary:hover{ background: #ddd; }
+
+        /* ── 结果提示 ── */
+        .result {
+            padding: 9px 14px;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            display: none;
+            margin-top: 8px;
+        }
+        .result.success { background: #d4edda; color: #155724; display: block; }
+        .result.error   { background: #f8d7da; color: #721c24; display: block; }
+
+        /* ── 滑块验证码 ── */
+        .slider-container {
+            position: relative;
+            width: 100%;
+            height: 175px;
+        }
+        .slider-bg {
+            position: relative;
+            width: 100%;
+            height: 155px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .slider-bg img { width: 100%; height: 100%; object-fit: cover; }
+        .slider-control {
+            position: absolute;
+            bottom: 0; left: 0;
+            width: 100%; height: 48px;
+            background: rgba(0,0,0,0.65);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .slider-track {
+            width: 80%; height: 4px;
+            background: #666;
+            border-radius: 2px;
+            position: relative;
+        }
+        .slider-thumb {
+            position: absolute;
+            top: 50%; left: 0;
+            transform: translate(-50%, -50%);
+            width: 40px; height: 40px;
+            background: white;
+            border-radius: 50%;
+            cursor: grab;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+        .slider-thumb:active { cursor: grabbing; }
+        .slider-thumb img { width: 35px; height: 35px; }
+
+        /* ── 点选 / 形近字 点击区 ── */
+        .click-canvas {
+            position: relative;
+            cursor: crosshair;
+            display: block !important;
+            padding: 0 !important;
+            background: #f6f7fb;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+        .click-canvas img {
+            display: block;
+            max-width: 100%;
+            user-select: none;
+        }
+        .click-mark {
+            position: absolute;
+            width: 20px; height: 20px;
+            border: 3px solid #ff0000;
+            border-radius: 50%;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+        }
+
+        /* ── 旋转验证码 ── */
+        .rotate-img {
+            max-width: 190px;
+            transition: transform 0.1s;
+        }
+        .rotate-control {
+            width: 100%;
+            margin-top: 12px;
+        }
+
+        /* ── 图片选择（九宫格） ── */
+        .image-select-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        .image-select-item {
+            aspect-ratio: 1;
+            border: 3px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            overflow: hidden;
+        }
+        .image-select-item:hover  { transform: scale(1.04); }
+        .image-select-item.selected {
+            border-color: #667eea;
+            box-shadow: 0 0 10px rgba(102,126,234,0.5);
+        }
+        .image-select-item img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* ── 拼图九宫格 ── */
+        .puzzle-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2px;
+            width: 180px;
+            margin: 0 auto;
+        }
+        .puzzle-piece { aspect-ratio: 1; cursor: grab; border-radius: 2px; }
+        .puzzle-piece.dragging { opacity: 0.5; }
+        .puzzle-piece img { width: 100%; height: 100%; display: block; }
+
+        /* ── 不可见验证码 ── */
+        .invisible-indicator {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+            width: 100%;
+        }
+
+        /* ── 图案锁 ── */
+        .pattern-lock-wrap {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .pattern-lock-wrap .hint-side {
+            flex: 0 0 96px;
+            text-align: center;
+        }
+        .pattern-lock-wrap .hint-side img {
+            width: 96px; height: 96px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+        }
+        .pattern-lock-wrap .draw-side { flex: 1; }
+
+        /* ── 拼图旋转（2×2格） ── */
+        #tile-rotate-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px;
+            width: 210px;
+            margin: 0 auto 10px;
+        }
+
+        /* ── 颜色选项 ── */
+        #color-options {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        /* ── 图形规律选项 ── */
+        #pattern-rule-options {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        /* ── 时钟输入 ── */
+        .clock-input-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            justify-content: center;
+            margin-top: 12px;
+        }
+        .clock-input-row label {
+            font-size: 14px;
+            color: #444;
+        }
+        .clock-input-row input,
+        .clock-input-row select {
+            padding: 6px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 15px;
+        }
+
+        /* ── 辅助文字 ── */
+        .hint-text {
+            text-align: center;
+            color: #888;
+            font-size: 0.82rem;
+            margin: 6px 0;
+        }
+
+        /* ── 响应式 ── */
+        @media (max-width: 820px) {
+            .grid { grid-template-columns: 1fr; }
+            .page-header h1 { font-size: 1.7rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- 页头 -->
+    <div class="page-header">
+        <h1>🔐 验证码系统</h1>
+        <p class="subtitle">全行业解决方案 · 覆盖20种主流验证码类型</p>
+        <div class="stats">
+            <span class="stat-chip">✅ 20 种类型</span>
+            <span class="stat-chip">🟢 简单 × 5</span>
+            <span class="stat-chip">🔵 中等 × 7</span>
+            <span class="stat-chip">🟠 困难 × 6</span>
+            <span class="stat-chip">🔴 专家 × 2</span>
+        </div>
+    </div>
+
+    <!-- ────────── 第一类：基础文字 ────────── -->
+    <div class="category">
+        <h2 class="category-title">📝 基础文字验证码</h2>
+        <div class="grid">
+
+            <!-- 1. 数字验证码 -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">数字验证码</span>
+                    <span class="badge easy">简单</span>
+                </div>
+                <p class="card-desc">纯数字图片，适合最基础场景</p>
+                <div class="captcha-area" id="numeric-area">
+                    <img id="numeric-img" src="" alt="验证码">
+                </div>
+                <div class="input-area">
+                    <input type="text" id="numeric-input" placeholder="输入数字">
+                    <button class="btn btn-primary" onclick="verifyCaptcha('numeric')">验证</button>
+                </div>
+                <button class="btn btn-secondary" onclick="refreshCaptcha('numeric')">刷新验证码</button>
+                <div class="result" id="numeric-result"></div>
+            </div>
+
+            <!-- 2. 字母数字混合 -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">字母数字混合</span>
+                    <span class="badge easy">简单</span>
+                </div>
+                <p class="card-desc">字母与数字组合，增加识别难度</p>
+                <div class="captcha-area" id="alphanumeric-area">
+                    <img id="alphanumeric-img" src="" alt="验证码">
+                </div>
+                <div class="input-area">
+                    <input type="text" id="alphanumeric-input" placeholder="输入验证码">
+                    <button class="btn btn-primary" onclick="verifyCaptcha('alphanumeric')">验证</button>
+                </div>
+                <button class="btn btn-secondary" onclick="refreshCaptcha('alphanumeric')">刷新验证码</button>
+                <div class="result" id="alphanumeric-result"></div>
+            </div>
+
+            <!-- 3. 扭曲变形 -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">扭曲变形验证码</span>
+                    <span class="badge medium">中等</span>
+                </div>
+                <p class="card-desc">传统 CAPTCHA，带干扰线和噪点</p>
+                <div class="captcha-area" id="distorted-area">
+                    <img id="distorted-img" src="" alt="验证码">
+                </div>
+                <div class="input-area">
+                    <input type="text" id="distorted-input" placeholder="输入验证码">
+                    <button class="btn btn-primary" onclick="verifyCaptcha('distorted')">验证</button>
+                </div>
+                <button class="btn btn-secondary" onclick="refreshCaptcha('distorted')">刷新验证码</button>
+                <div class="result" id="distorted-result"></div>
+            </div>
+
+            <!-- 4. 中文验证码 -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">中文验证码</span>
+                    <span class="badge medium">中等</span>
+                </div>
+                <p class="card-desc">汉字验证码，针对中文用户场景</p>
+                <div class="captcha-area" id="chinese-area">
+                    <img id="chinese-img" src="" alt="验证码">
+                </div>
+                <div class="input-area">
+                    <input type="text" id="chinese-input" placeholder="输入中文">
+                    <button class="btn btn-primary" onclick="verifyCaptcha('chinese')">验证</button>
+                </div>
+                <button class="btn btn-secondary" onclick="refreshCaptcha('chinese')">刷新验证码</button>
+                <div class="result" id="chinese-result"></div>
+            </div>
+
+            <!-- 13. 拼音输入 -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">拼音输入</span>
+                    <span class="badge easy">简单</span>
+                </div>
+                <p class="card-desc" id="pinyin-hint">输入图中汉字的拼音首字母</p>
+                <div class="captcha-area">
+                    <img id="pinyin-img" src="" alt="拼音验证码" style="width:100%;border-radius:6px;">
+                </div>
+                <input class="full-input" type="text" id="pinyin-input" placeholder="输入拼音首字母（如：xg）">
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="refreshCaptcha('pinyin')">刷新</button>
+                    <button class="btn btn-primary" onclick="verifyCaptcha('pinyin')">验证</button>
+                </div>
+                <div class="result" id="pinyin-result"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ────────── 第二类：交互操作 ────────── -->
+    <div class="category">
+        <h2 class="category-title">🎯 交互操作验证码</h2>
+        <div class="grid">
+
+            <!-- 5. 滑块拼图 -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">滑块拼图验证码</span>
+                    <span class="badge hard">困难</span>
+                </div>
+                <p class="card-desc">拖动滑块将缺口补全</p>
+                <div class="slider-container" id="slider-area">
+                    <div class="slider-bg">
+                        <img id="slider-bg-img" src="" alt="背景图">
+                        <div class="slider-control">
+                            <div class="slider-track">
+                                <div class="slider-thumb" id="slider-thumb">
+                                    <img id="slider-thumb-img" src="" alt="滑块">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="refreshCaptcha('slider')">刷新</button>
+                    <button class="btn btn-primary" onclick="verifyCaptcha('slider')">验证</button>
+                </div>
+                <div class="result" id="slider-result"></div>
+            </div>
+
+            <!-- 6. 点选验证码 -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">点选验证码</span>
+                    <span class="badge hard">困难</span>
+                </div>
+                <p class="card-desc">按顺序点击图中指定字符</p>
+                <div class="captcha-area click-canvas" id="click-canvas" onclick="handleClickText(event)">
+                    <img id="click-img" src="" alt="点击验证码" style="pointer-events:none;display:block;max-width:100%;user-select:none;">
+                </div>
+                <p id="click-question" class="hint-text"></p>
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="refreshCaptcha('click_text')">刷新</button>
+                    <button class="btn btn-primary" onclick="verifyCaptcha('click_text')">验证</button>
+                </div>
+                <div class="result" id="click_text-result"></div>
+            </div>
+
+            <!-- 7. 旋转验证码 -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">旋转验证码</span>
+                    <span class="badge hard">困难</span>
+                </div>
+                <p class="card-desc">拖动滑块将图中 <strong>TOP</strong> 旋转到正上方</p>
+                <div class="captcha-area">
+                    <img id="rotate-img" class="rotate-img" src="" alt="旋转验证码">
+                </div>
+                <input type="range" id="rotate-range" class="rotate-control" min="0" max="360" value="0">
+                <p class="hint-text">旋转角度：<span id="rotate-value">0</span>°</p>
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="refreshCaptcha('rotate')">刷新</button>
+                    <button class="btn btn-primary" onclick="verifyCaptcha('rotate')">验证</button>
+                </div>
+                <div class="result" id="rotate-result"></div>
+            </div>
+
+            <!-- 14. 图案锁 -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">图案锁</span>
+                    <span class="badge hard">困难</span>
+                </div>
+                <p class="card-desc">参照左图，在右侧点阵按顺序连出相同图案</p>
+                <div class="pattern-lock-wrap" style="margin-bottom:10px;">
+                    <div class="hint-side">
+                        <p class="hint-text" style="margin-bottom:4px;">目标图案</p>
+                        <img id="pattern-hint-img" src="" alt="目标图案">
+                    </div>
+                    <div class="draw-side">
+                        <p class="hint-text" style="margin-bottom:4px;">在此绘制</p>
+                        <canvas id="pattern-canvas" width="240" height="240"
+                            style="border-radius:8px;cursor:crosshair;display:block;margin:0 auto;max-width:100%;"></canvas>
+                    </div>
+                </div>
+                <p class="hint-text">已连接节点：<span id="pattern-count">0</span> 个</p>
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="refreshCaptcha('pattern_lock')">刷新</button>
+                    <button class="btn btn-primary" onclick="verifyCaptcha('pattern_lock')">验证</button>
+                </div>
+                <div class="result" id="pattern_lock-result"></div>
+            </div>
+
+            <!-- 18. 拼图旋转 -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">拼图旋转</span>
+                    <span class="badge medium">中等</span>
+                </div>
+                <p class="card-desc">每块图片有箭头，<strong>点击旋转</strong>使所有箭头朝上（↑）</p>
+                <div id="tile-rotate-grid"></div>
+                <p class="hint-text">已修正：<span id="tile-correct-count">0</span> / 4 块</p>
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="refreshCaptcha('tile_rotate')">刷新</button>
+                    <button class="btn btn-primary" onclick="verifyCaptcha('tile_rotate')">验证</button>
+                </div>
+                <div class="result" id="tile_rotate-result"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ────────── 第三类：认知推理 ────────── -->
+    <div class="category">
+        <h2 class="category-title">🧠 认知推理验证码</h2>
+        <div class="grid">
+
+            <!-- 8. 算术验证码 -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">算术验证码</span>
+                    <span class="badge easy">简单</span>
+                </div>
+                <p class="card-desc">简单数学运算题，快速作答</p>
+                <div class="captcha-area" id="arithmetic-area">
+                    <img id="arithmetic-img" src="" alt="算术题">
+                </div>
+                <div class="input-area">
+                    <input type="text" id="arithmetic-input" placeholder="输入答案">
+                    <button class="btn btn-primary" onclick="verifyCaptcha('arithmetic')">验证</button>
+                </div>
+                <button class="btn btn-secondary" onclick="refreshCaptcha('arithmetic')">刷新</button>
+                <div class="result" id="arithmetic-result"></div>
+            </div>
+
+            <!-- 10. 语义问答 -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">语义问答验证码</span>
+                    <span class="badge easy">简单</span>
+                </div>
+                <p class="card-desc">生活常识问答，人类易答机器难</p>
+                <div class="captcha-area" id="semantic-area">
+                    <p id="semantic-question" style="font-size:1.05rem;color:#333;text-align:center;"></p>
+                </div>
+                <p id="semantic-hint" class="hint-text"></p>
+                <div class="input-area">
+                    <input type="text" id="semantic-input" placeholder="输入答案">
+                    <button class="btn btn-primary" onclick="verifyCaptcha('semantic')">验证</button>
+                </div>
+                <button class="btn btn-secondary" onclick="refreshCaptcha('semantic')">刷新</button>
+                <div class="result" id="semantic-result"></div>
+            </div>
+
+            <!-- 15. 形近字找不同 -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">形近字找不同</span>
+                    <span class="badge hard">困难</span>
+                </div>
+                <p class="card-desc" id="odd-question">6个字中有1个是形近字，请找出并点击它</p>
+                <div class="captcha-area click-canvas" id="odd-canvas" onclick="handleOddClick(event)" style="cursor:pointer;">
+                    <img id="odd-img" src="" alt="形近字找不同" style="pointer-events:none;display:block;max-width:100%;user-select:none;">
+                </div>
+                <p class="hint-text">已点击：<span id="odd-clicked">-</span></p>
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="refreshCaptcha('odd_one_out')">刷新</button>
+                    <button class="btn btn-primary" onclick="verifyCaptcha('odd_one_out')">验证</button>
+                </div>
+                <div class="result" id="odd_one_out-result"></div>
+            </div>
+
+            <!-- 16. 图形找规律 -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">图形找规律</span>
+                    <span class="badge hard">困难</span>
+                </div>
+                <p class="card-desc" id="pattern-rule-question">观察 3×3 矩阵的规律，选出 ? 处的图形</p>
+                <div class="captcha-area">
+                    <img id="pattern-rule-img" src="" alt="规律图" style="width:210px;height:210px;border-radius:6px;">
+                </div>
+                <div id="pattern-rule-options"></div>
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="refreshCaptcha('pattern_rule')">刷新</button>
+                    <button class="btn btn-primary" onclick="verifyCaptcha('pattern_rule')">验证</button>
+                </div>
+                <div class="result" id="pattern_rule-result"></div>
+            </div>
+
+            <!-- 19. 颜色混合 -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">颜色混合</span>
+                    <span class="badge medium">中等</span>
+                </div>
+                <p class="card-desc" id="color-question">选择两种颜色混合后的结果</p>
+                <div class="captcha-area">
+                    <img id="color-img" src="" alt="颜色" style="width:100%;border-radius:6px;">
+                </div>
+                <div id="color-options"></div>
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="refreshCaptcha('color_mix')">刷新</button>
+                    <button class="btn btn-primary" onclick="verifyCaptcha('color_mix')">验证</button>
+                </div>
+                <div class="result" id="color_mix-result"></div>
+            </div>
+
+            <!-- 20. 时钟验证码 -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">时钟验证码</span>
+                    <span class="badge medium">中等</span>
+                </div>
+                <p class="card-desc" id="clock-question">观察时钟，输入图中显示的时间</p>
+                <div class="captcha-area">
+                    <img id="clock-img" src="" alt="时钟" style="width:200px;height:200px;border-radius:8px;">
+                </div>
+                <div class="clock-input-row">
+                    <label>小时：
+                        <input type="number" id="clock-hour" min="1" max="12" value="12" style="width:60px;">
+                    </label>
+                    <label>分钟：
+                        <select id="clock-minute">
+                            <option value="0">00</option>
+                            <option value="15">15</option>
+                            <option value="30">30</option>
+                            <option value="45">45</option>
+                        </select>
+                    </label>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="refreshCaptcha('clock')">刷新</button>
+                    <button class="btn btn-primary" onclick="verifyCaptcha('clock')">验证</button>
+                </div>
+                <div class="result" id="clock-result"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ────────── 第四类：多媒体识别 ────────── -->
+    <div class="category">
+        <h2 class="category-title">🎨 多媒体识别验证码</h2>
+        <div class="grid">
+
+            <!-- 9. 图片选择 -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">图片选择验证码</span>
+                    <span class="badge expert">专家</span>
+                </div>
+                <p class="card-desc">选择所有包含指定物体的图片</p>
+                <p id="image-select-question" class="hint-text" style="font-size:0.95rem;color:#444;margin-bottom:8px;"></p>
+                <div class="image-select-grid" id="image-select-grid"></div>
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="refreshCaptcha('image_select')">刷新</button>
+                    <button class="btn btn-primary" onclick="verifyCaptcha('image_select')">验证</button>
+                </div>
+                <div class="result" id="image_select-result"></div>
+            </div>
+
+            <!-- 17. 图片+音频双模式 -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">图片＋音频双模式</span>
+                    <span class="badge medium">中等</span>
+                </div>
+                <p class="card-desc">识别图片中的 4 位数字；听不清可点播音频辅助</p>
+                <div class="captcha-area" style="flex-direction:column;gap:10px;">
+                    <img id="audio-captcha-img" src="" alt="数字验证码图片" style="max-width:100%;border-radius:6px;">
+                    <button class="btn btn-secondary" onclick="playAudio()" style="font-size:13px;padding:7px 16px;">
+                        🔊 播放音频辅助
+                    </button>
+                    <audio id="audio-player" style="display:none;"></audio>
+                </div>
+                <input class="full-input" type="text" id="audio-answer" placeholder="输入图片中的 4 位数字">
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="refreshCaptcha('audio')">刷新</button>
+                    <button class="btn btn-primary" onclick="verifyCaptcha('audio')">验证</button>
+                </div>
+                <div class="result" id="audio-result"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ────────── 第五类：行为 / 特殊 ────────── -->
+    <div class="category">
+        <h2 class="category-title">🔮 行为与特殊验证码</h2>
+        <div class="grid">
+
+            <!-- 11. 不可见验证码 -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">不可见验证码</span>
+                    <span class="badge expert">专家</span>
+                </div>
+                <p class="card-desc">通过鼠标行为分析判断是否为机器人，无需用户主动操作</p>
+                <div class="captcha-area">
+                    <div class="invisible-indicator" id="invisible-indicator">
+                        <p id="invisible-status">正在检测行为...</p>
+                        <p style="font-size:0.85rem;margin-top:8px;" id="invisible-hint">请移动鼠标或点击页面</p>
+                    </div>
+                </div>
+                <p class="hint-text">停留时间：<span id="invisible-elapsed">0</span>ms / <span id="invisible-time">1000</span>ms</p>
+                <div class="btn-group" style="justify-content:center;">
+                    <button class="btn btn-primary" onclick="verifyCaptcha('invisible')" id="invisible-verify-btn">完成验证</button>
+                </div>
+                <div class="result" id="invisible-result"></div>
+            </div>
+
+            <!-- 12. 九宫格拼图 -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">九宫格拼图</span>
+                    <span class="badge expert" style="background:#9c27b0">专家</span>
+                </div>
+                <p class="card-desc">打乱的九宫格，拖拽还原正确顺序</p>
+                <div class="captcha-area">
+                    <div class="puzzle-container" id="puzzle-container"></div>
+                </div>
+                <p class="hint-text">拖拽图块重新排列</p>
+                <div class="btn-group" style="justify-content:center;">
+                    <button class="btn btn-secondary" onclick="refreshCaptcha('puzzle')">刷新</button>
+                    <button class="btn btn-primary" onclick="verifyCaptcha('puzzle')">验证</button>
+                </div>
+                <div class="result" id="puzzle-result"></div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<script src="app.js?v=24"></script>
+</body>
+</html>
