@@ -110,7 +110,7 @@ captcha-system/
 
 ## 📁界面展示
 
-![FireShot Capture 006 - 验证码系统 - 全行业解决方案 - [localhost]](D:\Chrome下载\FireShot\FireShot%20Capture%20006%20-%20验证码系统%20-%20全行业解决方案%20-%20[localhost].png)
+![验证码系统 - 全行业解决方案](images/ui.png "验证码系统 - 全行业解决方案")
 
 ---
 
